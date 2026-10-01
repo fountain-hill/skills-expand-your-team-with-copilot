@@ -528,6 +528,59 @@ document.addEventListener("DOMContentLoaded", () => {
         <span class="tooltip-text">Regular meetings at this time throughout the semester</span>
       </p>
       ${capacityIndicator}
+      <div class="activity-share">
+        <span class="activity-share-label">Share:</span>
+        <button
+          type="button"
+          class="share-button share-twitter tooltip"
+          data-activity="${name}"
+          data-platform="twitter"
+          aria-label="Share on X (Twitter)"
+        >
+          🐦
+          <span class="tooltip-text">Share on X (Twitter)</span>
+        </button>
+        <button
+          type="button"
+          class="share-button share-facebook tooltip"
+          data-activity="${name}"
+          data-platform="facebook"
+          aria-label="Share on Facebook"
+        >
+          📘
+          <span class="tooltip-text">Share on Facebook</span>
+        </button>
+        <button
+          type="button"
+          class="share-button share-whatsapp tooltip"
+          data-activity="${name}"
+          data-platform="whatsapp"
+          aria-label="Share on WhatsApp"
+        >
+          💬
+          <span class="tooltip-text">Share on WhatsApp</span>
+        </button>
+        <button
+          type="button"
+          class="share-button share-email tooltip"
+          data-activity="${name}"
+          data-platform="email"
+          aria-label="Share by email"
+        >
+          ✉️
+          <span class="tooltip-text">Share by email</span>
+        </button>
+        <button
+          type="button"
+          class="share-button share-copy tooltip"
+          data-activity="${name}"
+          data-platform="copy"
+          aria-label="Copy link"
+        >
+          🔗
+          <span class="tooltip-text">Copy link</span>
+        </button>
+      </div>
       <div class="participants-list">
         <h5>Current Participants:</h5>
         <ul>
@@ -587,7 +640,82 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
+    // Add click handlers for share buttons
+    const shareButtons = activityCard.querySelectorAll(".share-button");
+    shareButtons.forEach((button) => {
+      button.addEventListener("click", (event) => {
+        event.preventDefault();
+        shareActivity(
+          button.dataset.activity,
+          details.description,
+          button.dataset.platform
+        );
+      });
+    });
+
     activitiesList.appendChild(activityCard);
+  }
+
+  // Share an activity on the chosen platform
+  function shareActivity(activityName, description, platform) {
+    const pageUrl = window.location.href;
+    const shareText = `Check out "${activityName}" at Mergington High School! ${description}`;
+
+    let shareUrl = "";
+    switch (platform) {
+      case "twitter":
+        shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+          shareText
+        )}&url=${encodeURIComponent(pageUrl)}`;
+        break;
+      case "facebook":
+        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+          pageUrl
+        )}&quote=${encodeURIComponent(shareText)}`;
+        break;
+      case "whatsapp":
+        shareUrl = `https://wa.me/?text=${encodeURIComponent(
+          `${shareText} ${pageUrl}`
+        )}`;
+        break;
+      case "email":
+        shareUrl = `mailto:?subject=${encodeURIComponent(
+          `Join me for ${activityName}!`
+        )}&body=${encodeURIComponent(`${shareText}\n\n${pageUrl}`)}`;
+        window.location.href = shareUrl;
+        return;
+      case "copy":
+        copyShareLink(`${shareText} ${pageUrl}`);
+        return;
+      default:
+        return;
+    }
+
+    window.open(shareUrl, "_blank", "noopener,noreferrer,width=600,height=500");
+  }
+
+  // Copy the share text/link to the clipboard and let the user know
+  async function copyShareLink(text) {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        // Fallback for browsers without clipboard API support
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+      }
+      showMessage("Link copied to clipboard!", "success");
+    } catch (error) {
+      console.error("Error copying link:", error);
+      showMessage("Could not copy link. Please try again.", "error");
+    }
   }
 
   // Event listeners for search and filter
